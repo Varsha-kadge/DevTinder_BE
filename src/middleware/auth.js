@@ -2,7 +2,7 @@ require('express');
 
 const authUser = (req,res,next) => {
     const token = "xyz";
-    const isUserAuthenticate = token === 'xy'
+    const isUserAuthenticate = token === 'xyz'
     if(!isUserAuthenticate){
         res.status(401).send("UnAutherised User");
     }
