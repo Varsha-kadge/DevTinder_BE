@@ -1,17 +1,46 @@
 const express = require("express");
 const connectDB = require("./config/database");
 const User = require("./models/user");
+const {validateSignUpData} = require("./utils/validateLoginData");
+const bcrypt = require("bcrypt");
 const app = express();
+const saltRounds =10;
+// middleware which will take json and convert it into object and store in req.body
 app.use(express.json());
 app.post("/signup", async(req,res)=>{
-    //const user = new User();
+    validateSignUpData(req);
+    const {firstName,lastName,emailId,password} = req.body;
     try{
-    ///await user.save();
+    const passwordHash = await bcrypt.hash(password, saltRounds);
+    const user = new User({firstName,lastName,emailId,password:passwordHash});
+    await user.save();
     console.log(req.body);
-    res.send("User added successfully!");
+    res.send("User is added successfully!");
     }
     catch(err){
-        res.status(400).send("Error saving the user:" + err.message)
+        res.status(400).send("ERROR:" + err.message)
+    }
+})
+
+app.post("/login", async(req,res) => {
+    const {emailId, password} = req.body;
+    try{
+        const user = await User.findOne({emailId: emailId});
+        if(user){
+         const isPasswordMatch =  await bcrypt.compare(password,user.password);
+         if(!isPasswordMatch){
+            res.status(400).send("Invalid Credentials");
+        }
+        else{
+            res.send("Login Successful");
+        }
+        }
+        else{
+            res.status(404).send("Invalid Credentials");
+        }
+    }
+    catch(err){
+        res.status(400).send("ERROR:" + err.message)
     }
 })
 
@@ -32,7 +61,6 @@ app.get("/user",async(req,res)=>{
 
 app.delete("/user",async (req,res)=>{
  const userId = req.body.ID;
- console.log(userId)
 try{
     const user = await User.findByIdAndDelete({_id : userId });
     if(!user){
@@ -44,6 +72,21 @@ try{
 }catch(err){
     res.status(400).send("Something Went Wrong");
 }
+})
+
+app.patch("/user",(req,res)=>{
+    const ID = req.body.Id;
+    const data = req.body;
+    const validate = { runValidators: true }
+    console.log(data, ID)
+    try{
+     const user = User.findByIdAndUpdate(ID,data, validate);
+     //console.log(user);
+     res.send("Updated Successfully");
+
+    }catch(err){
+        res.status(400).send("Something went wrong");
+    }
 })
 
 connectDB().then(()=>{
