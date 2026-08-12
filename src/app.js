@@ -3,10 +3,14 @@ const connectDB = require("./config/database");
 const User = require("./models/user");
 const {validateSignUpData} = require("./utils/validateLoginData");
 const bcrypt = require("bcrypt");
+const cookieParser = require("cookie-parser");
+const {userAuth} = require("./middleware/auth");
 const app = express();
 const saltRounds =10;
 // middleware which will take json and convert it into object and store in req.body
 app.use(express.json());
+app.use(cookieParser());
+
 app.post("/signup", async(req,res)=>{
     validateSignUpData(req);
     const {firstName,lastName,emailId,password} = req.body;
@@ -22,16 +26,28 @@ app.post("/signup", async(req,res)=>{
     }
 })
 
+app.get("/profile", userAuth, async(req,res) => {
+    try{
+    const User = req.body;
+    res.send(User);
+    }
+    catch(err){
+        res.status(400).send("ERROR:" + err.message)
+    }
+})
+
 app.post("/login", async(req,res) => {
     const {emailId, password} = req.body;
     try{
         const user = await User.findOne({emailId: emailId});
         if(user){
-         const isPasswordMatch =  await bcrypt.compare(password,user.password);
+         const isPasswordMatch =  await user.validatePassword(password);
          if(!isPasswordMatch){
             res.status(400).send("Invalid Credentials");
         }
         else{
+            const token = await user.getjwtToken();
+            res.cookie("token", token);
             res.send("Login Successful");
         }
         }
