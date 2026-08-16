@@ -13,7 +13,7 @@ const userAuth = async (req,res,next) => {
     if(!user){
         throw new Error("User is not present");
     }
-    req.body = user;
+    req.user = user;
     next();
     }    
     catch(err){

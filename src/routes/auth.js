@@ -44,4 +44,24 @@ authRouter.post("/login", async(req,res) => {
     }
 })
 
+authRouter.post("/logout" , (req,res) => {
+    res.clearCookie("token");
+    res.send("Logout Successfully");
+})
+
+authRouter.post("/forgot-password", async(req,res) =>{
+    try{
+        const {emailId} = req.body;
+        const user = await User.findOne({emailId: emailId});
+        if(!user){
+            res.status(404).send("User is not present");
+        }
+        else{
+            res.send("Password reset link is sent to your email");
+        }
+    }catch(err){
+        res.status(400).send("ERROR:" + err.message)
+    }
+})
+
 module.exports = authRouter;

@@ -8,7 +8,7 @@ const userSchema = new mongoose.Schema({
         type:String,
         maxlength:20,
         minlength:3,
-        required:true
+        required:true,
     },
     lastName:{
         type:String,
@@ -47,6 +47,18 @@ const userSchema = new mongoose.Schema({
     },
     skills:{
         type:[String]
+    },
+    photoUrl:{
+        type:String,
+        validate(value){
+            if(!validator.isURL(value)){
+                throw new Error("Photo URL is not valid");
+            }
+        }
+    },
+    about:{
+        type:String,
+        maxlength:200
     }
 },{
     timestamps:true
